@@ -1,0 +1,268 @@
+<odoo>
+  <data>
+
+<!-- add js file in the static directory -->
+          <template id="searchbox_deliveryorder" name="Search deliveryorder" inherit_id="website.assets_frontend">
+              <xpath expr="." position="inside">
+
+                <script type="text/javascript" src="/website_delivery_tracking/static/src/js/search_do.js"/>
+
+              </xpath>
+          </template>
+
+
+<!-- add link for delivery order in the Your Documents -->
+
+    <template id="portal_my_home_do" name="Portal My Home : Delivery entries" inherit_id="portal.portal_my_home" priority="20">
+        <xpath expr="//ul[hasclass('o_portal_docs')]" position="inside">
+
+            <li t-if="DeliveryOrder" class="list-group-item">
+                <span class="badge" t-esc="DeliveryOrder"/>
+                <a href="/my/delieveryorders">Delivery Orders</a>
+
+            </li>
+        </xpath>
+    </template>
+
+
+
+<!-- add tree view for the delivery order -->
+
+    <template id="portal_delivery_orders" name="My Delivery Orders">
+     <t t-call="portal.portal_layout">
+       <h3>Delivery Orders
+           <t t-call="portal.portal_searchbar"/>
+       </h3>
+		
+		<form action="/my/delieveryorders/" method="POST">
+			<input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/> 
+	       	<div class="input-group">
+	           <div class="oe_search">
+	               <input type="text" id="search_ip" name="delivery_search" class="search-query form-control oe_search_box" placeholder="Search..." t-att-value="search" />
+	
+	           </div>           
+	           <span class="input-group-btn">
+	              <button type="submit" id="search_btn"  class="btn btn-default oe_search_button"><i class="fa fa-search"/></button>
+	           </span>
+	       </div>
+		</form>
+       <t t-if="not orders">
+           <p>There are currently no Delivery orders for your account.</p>
+       </t>
+
+       <div t-if="orders" class="panel panel-default">
+          <div class="table-responsive">
+            <table id='tb' class="table table-hover o_portal_my_doc_table">
+              <thead>
+                <tr class="active">
+
+                    <th>Delivery Order No</th>
+                    <th>SO Name</th>
+                    <th>Delivery Date</th>
+                    <th>Status of Delivery</th>
+
+                  </tr>
+              </thead>
+              <t id='get_lines' t-foreach="orders" t-as="do">
+                  <tr id='get_line'>
+
+                      <td >
+                          <a t-attf-href="/my/delieveryorders/#{do.id}?#{keep_query()}"><t t-esc="do.name"/></a>
+                      </td>
+                      <td><span t-field="do.origin"/></td>
+
+                      <td><span t-field="do.scheduled_date"/></td>
+
+                      <td>
+
+                        <t t-if="do.state in ['draft','waiting','confirmed']">
+                          <span class="label label-default"><i class="fa fa-fw fa-remove"/>Pending</span>
+                        </t>
+
+                        <t t-if="do.state == 'assigned'">
+                          <span class="label label-default"><i class="fa fa-fw fa-remove"/>Ready for Dispatch.</span>
+                        </t>
+
+                        <t t-if="do.state == 'done'">
+                          <span class="label label-default"><i class="fa fa-fw fa-clock-o"/>Transferred</span>
+                        </t>
+
+                        <t t-if="do.state == 'cancel'">
+                          <span class="label label-default"><i class="fa fa-fw fa-clock-o"/>Cancelled</span>
+                        </t>
+
+                      </td>
+
+                  </tr>
+              </t>
+          </table>
+        </div>
+      <div t-if="pager" class="o_portal_pager text-center">
+        <t t-call="portal.pager"/>
+      </div>
+  </div>
+
+</t>
+</template>
+
+<!-- add form view of delivery order -->
+<template id="portal_my_home_menu_sale" name="Portal layout : delivery menu entries" inherit_id="portal.portal_layout" priority="20">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+
+        <li t-if="page_name == 'DeliveryOrder' or delivery_order">
+            <a t-if="delivery_order" t-attf-href="/my/delieveryorders?{{ keep_query() }}">Delivery Orders</a>
+            <t t-else="">Delivery Orders</t>
+        </li>
+
+        </xpath>
+</template>
+
+
+<!-- form view DO -->
+
+<template id="portal_delivery_page" name="Delivery Order">
+     <t t-call="portal.portal_layout">
+       <t t-set="delivery_order" t-value="order"/> <!-- rename to ensure breadcrumb compatibility (differentiate with purchase orders) -->
+       <t t-set="invoices" t-value="[i for i in order.move_lines if i.state not in ['draft', 'waiting','confirmed','assigned','cancel']]"/>
+
+           <div id="optional_placeholder"></div>
+             <div class="container">
+              <div class="panel panel-default">
+
+               <div class="panel-heading">
+                 <div class="row">
+                   <div class="col-md-12">
+                     <h4>
+                       <t t-call='portal.record_pager'/>
+                       Delivery Details
+                       <span t-esc="order.name"/>
+                     </h4>
+                   </div>
+                 </div>
+               </div>
+
+          <div class="panel-body">
+
+             <div class="row">
+                   <div class="col-md-6">
+                    <strong>Order Number</strong>
+                   </div>
+                   <div class="col-md-6">
+                       <span t-esc="order.name"/>
+                   </div>
+             </div>
+            <hr></hr>
+
+               <div class="row">
+
+                 <div class="col-md-6">
+                  <strong> Customer Address </strong>
+                 </div>
+
+                 <div class="col-md-6">
+                     <address t-field="order.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": True}'/>
+                 </div>
+               </div>
+           </div>
+
+ <hr></hr>
+
+
+
+
+        <div class="panel-body">
+
+                <div class="row">
+
+                  <div class="col-md-4 text-left">
+                    <strong>Delivery Number</strong>
+                  </div>
+                  <div class="col-md-4 text-left">
+                    <strong>Delivery Date</strong>
+                  </div>
+                  <div class="col-md-4 text-left">
+                    <strong>Delivery Status</strong>
+                  </div>
+                </div>
+                <t t-foreach="order" t-as="ol">
+                  <div class="row purchases_vertical_align">
+
+                    <div class="col-md-4 text-left">
+                      <span t-field="ol.name" />
+                    </div>
+                    <div class="col-md-4 text-left">
+                        <span t-esc="ol.scheduled_date"/>
+                    </div>
+                    <div class="col-md-4 text-left">
+
+                      <t t-if="ol.state in ['draft','waiting','confirmed']">
+                        <span >Pending</span>
+                      </t>
+
+                      <t t-if="ol.state == 'assigned'">
+                        <span >Ready for Dispatch.</span>
+                      </t>
+
+                      <t t-if="ol.state == 'done'">
+                        <span >Transferred</span>
+                      </t>
+
+                      <t t-if="ol.state == 'cancel'">
+                        <span >Cancelled</span>
+                      </t>
+
+
+                    </div>
+                  </div>
+                </t>
+          </div>
+
+<hr></hr>
+
+            <div class="panel-body">
+
+                   <div class="row">
+
+                     <div class="hidden-sm hidden-xs col-md-3 text-left">
+                       <strong>Image</strong>
+                     </div>
+                     <div class="hidden-sm hidden-xs col-md-3 text-left">
+                       <strong>Product Name</strong>
+                     </div>
+                     <div class="hidden-sm hidden-xs col-md-3 text-left">
+                       <strong>Quantity</strong>
+                     </div>
+                     <div class="hidden-sm hidden-xs col-md-3 text-left">
+                       <strong>UOM</strong>
+                     </div>
+
+
+                   </div>
+                   <t t-foreach="order.move_lines" t-as="ol">
+                     <div class="row orders_vertical_align">
+
+                         <div class="hidden-sm hidden-xs col-md-3 text-left">
+                           <span t-field="ol.product_id.image_medium" t-options="{'widget': 'image', 'class': 'img-rounded', 'style':'width: 48px;height:48px'}" />
+                         </div>
+                         <div id='product_name' class="hidden-sm hidden-xs col-md-3 text-left">
+                           <span t-esc="ol.product_id.name"/>
+                         </div>
+                         <div class="hidden-sm hidden-xs col-md-3 text-left">
+                           <span t-field="ol.product_uom_qty" />
+                         </div>
+                         <div class="hidden-sm hidden-xs col-md-3 text-left">
+                           <span t-field="ol.product_uom" />
+                         </div>
+
+                     </div>
+                   </t>
+            </div>
+</div>
+
+</div>
+</t>
+
+</template>
+
+</data>
+</odoo>

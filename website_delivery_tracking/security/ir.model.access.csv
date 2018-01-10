@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_website_delivery_tracking_website_delivery_tracking,website_delivery_tracking.website_delivery_tracking,model_website_delivery_tracking_website_delivery_tracking,,1,0,0,0
