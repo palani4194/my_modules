@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+<script>
+{% block jquery %}
+
+// endpoint to return rest data's
+
+var endpoint = '/api/chart/data/'
+var labels =[]
+var values = []
+var labels2 =[]
+var values2 = [];
+
+// to return json data in the console
+$.ajax({
+
+  method : "GET",
+  url:endpoint,
+  success : function([d,e]){
+
+// covert to integer
+    male_count =  Number(d.values[0])
+    female_count =  Number(d.values[1])
+// first chart
+    values = [male_count,female_count]
+    labels = d.labels
+// second chart
+    labels2 = e.labels
+    values2 = e.values
+
+    setChart()
+  },
+  error : function(error_data){
+    console.log("error");
+    console.log(error_data);
+  }
+})
+
+
+// chart function definition
+function setChart(){
+  // debugger;
+  var ctx = document.getElementById("myChart");
+  var ctx2 = document.getElementById("myChart2");
+
+// no of males and females graph
+
+  var myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: labels,
+          datasets: [{
+              label: 'no of males and females',
+              data: values,
+              backgroundColor: [
+                  'rgba(255, 99, 132, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+              ],
+              borderColor: [
+                  'rgba(255,99,132,1)',
+                  'rgba(54, 162, 235, 1)',
+              ],
+              borderWidth: 1
+          }]
+      },
+      options: {
+          scales: {
+              yAxes: [{
+                  ticks: {
+                      beginAtZero:true
+                  }
+              }]
+          }
+      }
+  });
+
+
+  // no of relationship status graph
+
+  var myChart = new Chart(ctx2, {
+
+      type: 'bar',
+      data: {
+          labels: labels2,
+          datasets: [{
+              label: 'no of relationship status',
+              data: values2,
+              backgroundColor: [
+                  'rgba(255, 99, 132, 0.2)',
+                  'rgba(54, 162, 235, 0.2)',
+                  'rgba(255, 206, 86, 0.2)',
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(153, 102, 255, 0.2)',
+                  'rgba(255, 159, 64, 0.2)'
+              ],
+              borderColor: [
+                  'rgba(255,99,132,1)',
+                  'rgba(54, 162, 235, 1)',
+                  'rgba(255, 206, 86, 0.2)',
+                  'rgba(75, 192, 192, 0.2)',
+                  'rgba(153, 102, 255, 0.2)',
+                  'rgba(255, 159, 64, 0.2)'
+              ],
+              borderWidth: 1
+          }]
+      },
+      options: {
+          scales: {
+              yAxes: [{
+                  ticks: {
+                      beginAtZero:true
+                  }
+              }]
+          }
+      }
+  });
+}
+
+
+{% endblock %}
+</script>
+
+
+<!--to show bar charts in the UI -->
+{% block content %}
+<div class='row' url-endpoint='{%url "api-data" %}'>
+<h1>Dataset Graphs</h1>
+<div class='col-sm-6'>
+
+       <canvas id="myChart2" width="400" height="400"></canvas>
+       <canvas id="myChart" width="400" height="400"></canvas>
+
+</div>
+</div>
+{% endblock %}
